@@ -1,0 +1,57 @@
+#!/bin/bash
+
+STAGING=/home/konrad/android/tools/BlobTools/recovery
+BLOB=/home/konrad/android/tools/BlobTools
+OUTFILE=$OUT/tf101_recovery.zip
+OUT_TARGET_HOST=linux-x86
+OUT=out/target/product/tf101
+ANDROID_BUILD_TOP=/home/konrad/android/builds/tf101
+REPACK=$OUT/repack.d
+SECURITYDIR=build/target/product/security
+CLOUD=/home/konrad/android/updates
+
+printf "Syncing..."
+echo
+cd $ANDROID_BUILD_TOP
+repo sync -j16
+source build/envsetup.sh
+lunch full_tf101-eng
+printf "Compilting TF101 recovery image..."
+echo
+make -j4 recoveryimage
+printf "Making blob file..."
+echo
+cd $BLOB
+./blobpack recoveryblob.HEADER recoveryblob SOS $OUT/recovery.img
+cd $ANDROID_BUILD_TOP
+
+printf "Sanitizing environment..."
+rm -rf $REPACK
+rm $CLOUD/tf101_recovery.zip
+mkdir -p $REPACK
+echo
+
+mkdir -p $REPACK/recovery
+cp -r $STAGING/kernel $REPACK/recovery
+cp -r $STAGING/META-INF $REPACK/recovery
+cp -r $BLOB/recoveryblob $REPACK/recovery/kernel
+
+# Pack it up and sign
+printf "Zipping package..."
+cd $REPACK/recovery
+zip -r update.zip .
+echo
+printf "Signing package..."
+cd $ANDROID_BUILD_TOP
+java -Xmx512m \
+	-jar out/host/linux-x86/framework/signapk.jar \
+	-w $SECURITYDIR/testkey.x509.pem $SECURITYDIR/testkey.pk8 \
+	$REPACK/recovery/update.zip $ANDROID_BUILD_TOP/$OUTFILE
+echo
+printf "Cleaning up..."
+rm -rf $REPACK
+echo
+printf "Moving package to the Cloud..."
+echo
+mv $ANDROID_BUILD_TOP/$OUTFILE $CLOUD
+printf "Done."

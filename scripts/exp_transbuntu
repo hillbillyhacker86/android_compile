@@ -1,0 +1,84 @@
+#!/bin/bash
+
+HOME=/home/konrad/android
+STAGING=$HOME/tools/BlobTools/kernel
+BLOB=$HOME/tools/BlobTools
+ABOOT=$HOME/tools/abootimg
+OUTFILE=Linux_Exp.zip
+MODSOUTFILE=modules.tar.gz
+KERNEL_BUILD_TOP=$HOME/builds/transbuntu/CrOS-Hybrid-Kernel
+MODULES=$HOME/builds/transbuntu/modules_exp
+REPACK=$HOME/tools/signing/repack.d
+SIGNING=$HOME/tools/signing
+CLOUD=$HOME/updates/Exp
+
+printf "Syncing & Updating Config..."
+echo
+cd $KERNEL_BUILD_TOP
+git pull
+make -j4 ARCH=arm tf1101_defconfig
+echo
+
+printf "Compiling Transbuntu kernel..."
+echo
+cd $KERNEL_BUILD_TOP
+make -j4 ARCH=arm CROSS_COMPILE=arm-eabi- zImage
+echo
+
+printf "Building Modules for kernel..."
+echo
+make -j4 ARCH=arm modules_install INSTALL_MOD_PATH=$MODULES
+cd $MODULES
+tar -czvf $MODSOUTFILE lib/
+echo
+
+printf "Updating Boot Image..."
+echo
+cd $ABOOT
+./abootimg -u linux.img -k $KERNEL_BUILD_TOP/arch/arm/boot/zImage
+echo
+
+printf "Making blob file..."
+echo
+cd $BLOB
+./blobpack kernelblob.HEADER kernelblob LNX $ABOOT/linux.img
+echo
+
+printf "Sanitizing environment..."
+echo
+rm -rf $REPACK
+rm $CLOUD/Linux_exp.zip
+mkdir -p $REPACK/kernel
+cp -r $STAGING/META-INF $REPACK/kernel
+cp -r $BLOB/kernelblob $REPACK/kernel
+echo
+
+printf "Zipping package..."
+echo
+cd $REPACK/kernel
+zip -r update.zip .
+echo
+printf "Signing package..."
+echo
+cd $SIGNING
+java -Xmx512m \
+	-jar signapk.jar \
+	-w testkey.x509.pem testkey.pk8 \
+	$REPACK/kernel/update.zip $KERNEL_BUILD_TOP/$OUTFILE
+echo
+
+printf "Cleaning up..."
+echo
+rm -rf $REPACK
+echo
+
+printf "Moving files to the Cloud..."
+echo
+mv $KERNEL_BUILD_TOP/$OUTFILE $CLOUD
+mv $KERNEL_BUILD_TOP/arch/arm/boot/zImage $CLOUD
+mv $KERNEL_BUILD_TOP/System.map $CLOUD
+mv $MODULES/$MODSOUTFILE $CLOUD
+echo
+
+printf "Done."
+echo
