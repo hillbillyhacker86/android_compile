@@ -20,7 +20,7 @@ do
         "$Option2")
             cd builds/cm9/vendor/hillbillyhacker
             clear
-            ./build-cm9 vision
+            ./build-cm9 toro
             break
             ;;
         "$Option3")
