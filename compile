@@ -2,11 +2,7 @@
 PS3='Please enter your choice: '
 Option1="Compile CM7"
 Option2="Compile CM9"
-Option3="Compile TF101 Recovery"
-Option4="Add Repository"
-Option5="Compile Transbuntu Kernel and bootimg"
-Option6="Transbuntu Experimental kernel"
-options=("$Option1" "$Option2" "$Option3" "$Option4" "$Option5" "$Option6" "Quit")
+options=("$Option1" "$Option2" "Quit")
 
 select opt in "${options[@]}"
 do
@@ -21,30 +17,6 @@ do
             cd builds/cm9/vendor/hillbillyhacker
             clear
             ./build-cm9
-            break
-            ;;
-        "$Option3")
-            cd scripts
-            clear
-            ./tf101-recovery
-            break
-            ;;
-        "$Option4")
-            cd scripts
-            clear
-            ./mk_repo
-            break
-            ;;
-        "$Option5")
-            cd scripts
-            clear
-            ./transbuntu
-            break
-            ;;
-        "$Option6")
-            cd scripts
-            clear
-            ./exp_transbuntu
             break
             ;;
         "Quit")
