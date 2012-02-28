@@ -17,6 +17,7 @@ do
             cd builds/cm9/vendor/hillbillyhacker
             clear
             ./build-cm9
+            ssh storage -t mv /home/downloads/android/builds/cm9/out/target/product/toro/cm_toro-ota-eng.will.zip /home/will/Dropbox/Public/android/updates/toro-cm9.zip
             break
             ;;
         "Quit")
