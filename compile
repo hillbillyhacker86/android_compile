@@ -9,7 +9,7 @@ select opt in "${options[@]}"
 do
     case $opt in
         "$Option1")
-            cd builds/cm7/vendor/hillbillyhacker
+            cd builds/cm9/vendor/hillbillyhacker
             clear
             ./build-cm9
             break
